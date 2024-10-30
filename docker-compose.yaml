@@ -1,28 +1,33 @@
-version: '3.8'
+version: "3.9"
 
 services:
   postgres:
     image: postgres:latest
-    restart: always
-    env_file: ./docker/postgres.env
-    ports:
-      - "5432:5432"
-    networks:
-      - backend-network
+    env_file:
+      - ./docker/postgres.env
+    environment:
+      TZ: "Europe/Paris"
+    restart: unless-stopped
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - data:/var/lib/postgresql/data
+    ports:
+      - 5432:5432
+    networks:
+      - backend
 
   pgadmin:
-    image: dpage/pgadmin4
-    restart: always
-    env_file: ./docker/pgadmin.env
-    ports:
-      - "5050:80"
-    networks:
-      - backend-network
+    image: dpage/pgadmin4:latest
+    restart: unless-stopped
+    env_file:
+      - ./docker/pgadmin.env
+    environment:
+      TZ: "Europe/Paris"
     volumes:
-      - pgadmin_data:/var/lib/pgadmin
-      - ./dockers/pgadmin_servers.json:/pgadmin4/servers.json
+      - ./docker/pgadmin_servers.json:/pgadmin4/servers.json
+    ports:
+      - 5050:80
+    networks:
+      - backend
     depends_on:
       - postgres
 
@@ -34,7 +39,7 @@ services:
     ports:
       - "3000:3000"
     networks:
-      - backend-network
+      - backend
       - frontend-network
     depends_on:
       - postgres
@@ -52,11 +57,11 @@ services:
       - backend
 
 networks:
-  backend-network:
-    driver: bridge
+  backend:
   frontend-network:
-    driver: bridge
 
 volumes:
   postgres_data:
   pgadmin_data:
+  data:
+  

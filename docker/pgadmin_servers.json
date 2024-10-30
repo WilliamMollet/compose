@@ -1,14 +1,13 @@
 {
   "Servers": {
     "1": {
-      "Name": "Postgres",
+      "Name": "ft_ipssi",
       "Group": "Servers",
-      "Host": "postgres",
       "Port": 5432,
-      "MaintenanceDB": "postgres",
-      "Username": "user",
-      "Password": "password",
-      "SSLMode": "prefer"
+      "Username": "william",
+      "SSLMode": "prefer",
+      "MaintenanceDB": "test_test",
+      "Host": "postgres"
     }
   }
 }
