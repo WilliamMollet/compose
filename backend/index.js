@@ -1,28 +1,30 @@
 // backend/index.js
-const express = require('express')
-const cors = require('cors')
+const express = require('express');
+const cors = require('cors');
+const { Pool } = require('pg');  // Client PostgreSQL
 
-const app = express()
+const app = express();
+app.use(cors());
 
-app.use(cors())
+// Configurer la connexion à la base de données
+const pool = new Pool({
+  user: process.env.DATABASE_USER,
+  host: process.env.DATABASE_HOST,
+  database: process.env.DATABASE_NAME,
+  password: process.env.DATABASE_PASSWORD,
+  port: process.env.DATABASE_PORT,
+});
 
-app.get('/', (req, res) => {
-  res.json([
-    {
-      "id":"1",
-      "title":"Book Review: The Name of the Wind"
-    },
-    {
-      "id":"2",
-      "title":"Game Review: Pokemon Brillian Diamond"
-    },
-    {
-      "id":"3",
-      "title":"Show Review: Alice in Borderland"
-    }
-  ])
-})
+app.get('/', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM reviews'); // Assure-toi d'avoir une table 'reviews'
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Erreur de récupération des données:', err);
+    res.status(500).json({ error: 'Erreur lors de la récupération des données' });
+  }
+});
 
 app.listen(3000, () => {
-  console.log('listening for requests on port 3000')
-})
+  console.log('Listening for requests on port 3000');
+});

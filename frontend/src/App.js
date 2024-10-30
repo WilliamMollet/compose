@@ -5,8 +5,9 @@ import React, { useEffect } from "react";
 
 function App() {
   const fetchData = async () => {
-    const res = await fetch("http://localhost:3000/");
-    console.log(res);
+    const res = await fetch(process.env.REACT_APP_BACKEND_URL);
+    const data = await res.json();
+    console.log(data);
   };
 
   useEffect(() => {
