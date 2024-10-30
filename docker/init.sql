@@ -1,0 +1,6 @@
+CREATE TABLE IF NOT EXISTS utilisateur (
+  id SERIAL PRIMARY KEY,
+  nom VARCHAR(50),
+  email VARCHAR(100) UNIQUE,
+  age INTEGER
+);

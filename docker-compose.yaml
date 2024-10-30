@@ -10,6 +10,7 @@ services:
     restart: unless-stopped
     volumes:
       - data:/var/lib/postgresql/data
+      - ./docker/init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
       - 5432:5432
     networks:
@@ -35,6 +36,7 @@ services:
     build:
       context: ./backend
       dockerfile: ../docker/backend.dockerfile
+    hostname: backend
     env_file: ./docker/backend.env
     ports:
       - "3000:3000"
@@ -48,6 +50,7 @@ services:
     build:
       context: ./frontend
       dockerfile: ../docker/frontend.dockerfile
+    hostname: frontend
     env_file: ./docker/frontend.env
     ports:
       - "8080:8080"
@@ -58,7 +61,9 @@ services:
 
 networks:
   backend:
+    driver: bridge
   frontend-network:
+    driver: bridge
 
 volumes:
   postgres_data:
