@@ -2,21 +2,27 @@ version: "3.9"
 
 services:
   traefik:
-    image: traefik:latest
+    image: traefik:v3.2
     command:
       - "--api.insecure=true"
       - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
       - "--entrypoints.web.address=:80"
-      - "--entrypoints.web-secure.address=:443"
+      - "--entrypoints.websecure.address=:443"
       - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
-      - "--certificatesresolvers.myresolver.acme.email=your-email@example.com" # Remplacez par votre adresse email
+      - "--certificatesresolvers.myresolver.acme.email=admin@admin.com"
       - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+      - "--certificatesresolvers.myresolver.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory"
+      - "--certificatesresolvers.myresolver.acme.httpchallenge=true"
+      - "--certificatesresolvers.myresolver.acme.httpchallenge.entrypoint=web"
+      - "--entrypoints.web.http.redirections.entryPoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entryPoint.scheme=https"
     ports:
       - "80:80"
       - "443:443"
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
-      - "./traefik/letsencrypt:/letsencrypt" # Pour stocker les certificats SSL
+      - "./letsencrypt:/letsencrypt"
     networks:
       - frontend-network
       - backend
@@ -25,6 +31,8 @@ services:
     image: postgres:latest
     env_file:
       - ./docker/postgres.env
+    ports:
+      - "5432:5432"
     environment:
       TZ: "Europe/Paris"
     restart: unless-stopped
@@ -37,6 +45,8 @@ services:
   pgadmin:
     image: dpage/pgadmin4:latest
     restart: unless-stopped
+    ports:
+      - "5050:80"
     env_file:
       - ./docker/pgadmin.env
     environment:
@@ -45,9 +55,10 @@ services:
       - ./docker/pgadmin_servers.json:/pgadmin4/servers.json
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.pgadmin.rule=Host(`localhost`)"
-      - "traefik.http.routers.pgadmin.entrypoints=web-secure"
-      - "traefik.http.routers.pgadmin.tls.certresolver=myresolver"
+      - "traefik.http.routers.pgadmin.rule=Host(`pgadmin.localhost`)"
+      - "traefik.http.routers.pgadmin.entrypoints=websecure"
+      - "traefik.http.routers.pgadmin.tls=true"
+      - "traefik.http.services.pgadmin.loadbalancer.server.port=80"
     networks:
       - backend
     depends_on:
@@ -63,9 +74,10 @@ services:
       - "3000:3000"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.backend.rule=Host(`localhost`)"
-      - "traefik.http.routers.backend.entrypoints=web-secure"
-      - "traefik.http.routers.backend.tls.certresolver=myresolver"
+      - "traefik.http.routers.backend.rule=Host(`api.localhost`)"
+      - "traefik.http.routers.backend.entrypoints=websecure"
+      - "traefik.http.routers.backend.tls=true"
+      - "traefik.http.services.backend.loadbalancer.server.port=3000"
     networks:
       - backend
       - frontend-network
@@ -82,8 +94,8 @@ services:
       - "8080:8080"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.frontend.rule=Host(`localhost`)" # Remplacez par le domaine souhaité
-      - "traefik.http.routers.frontend.entrypoints=web-secure"
+      - "traefik.http.routers.frontend.rule=Host(`localhost`)"
+      - "traefik.http.routers.frontend.entrypoints=websecure"
       - "traefik.http.routers.frontend.tls.certresolver=myresolver"
     networks:
       - frontend-network
